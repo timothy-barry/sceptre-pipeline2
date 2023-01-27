@@ -58,7 +58,9 @@ process check_inputs {
   $params.grna_group_column_name \
   $params.response_pod_size \
   $params.pair_pod_size \
-  $params.n_pairs_to_sample
+  $params.undercover \
+  $params.n_pairs_to_sample \
+  $params.undercover_group_size
   """
 }
 
