@@ -26,20 +26,27 @@ pairs_to_analyze <- readRDS(pairs_to_analyze_fp)
 #################################
 # CARRY OUT THE PRELIMINARY STEPS
 #################################
-
 # step 1: check the inputs (called for side effects)
-check_pipeline_inputs(mm_odm, pairs_to_analyze, response_modality_name, grna_modality_name, grna_group_column_name, undercover)
+sceptre3:::check_pipeline_inputs(mm_odm, pairs_to_analyze, response_modality_name,
+                                grna_modality_name, grna_group_column_name, undercover) |> invisible()
 
 # step 2: process multimodal odm
-mm_odm <- process_multimodal_odm(mm_odm, response_modality_name, grna_modality_name, grna_group_column_name); gc()
+mm_odm <- sceptre3:::process_multimodal_odm(mm_odm, response_modality_name,
+                                           grna_modality_name, grna_group_column_name)
+gc() |> invisible()
 
-# step 3: if in low MOI, assign gRNAs to cells
+# step 3: if in low MOI, update the mm_odm, obtaining the index of each gRNA group
+if (mm_odm@global_misc$moi == "low") {
+  mm_odm <- sceptre3:::assign_grnas_to_cells_lowmoi(mm_odm = mm_odm, undercover = undercover)
+}
 
-# step 4: construct the negative control pairs (if necessary)
-if (undercover) pairs_to_analyze <- construct_negative_control_pairs(mm_odm, n_pairs_to_sample, undercover_group_size)
+# step 4: construct the negative control pairs (if undercover) # (IMPROVE)
+if (undercover) pairs_to_analyze <- sceptre3:::construct_negative_control_pairs(mm_odm, n_pairs_to_sample,
+                                                                                undercover_group_size)
 
 # step 5: perform pairwise quality control, filtering for pairs with a sufficiently large sample size
+# (IMPLEMENT)
 
 # step 6: order pairs to analyze, and assign pair and response IDs
-pairs_to_analyze <- pairs_to_analyze |> dplyr::arrange(grna_group, grna_group, response_id)
-assign_pod_ids(pairs_to_analyze, gene_pod_size, pair_pod_size)
+sceptre3:::assign_pod_ids(pairs_to_analyze, response_pod_size, pair_pod_size)
+saveRDS(mm_odm, "mm_odm_new.rds")
